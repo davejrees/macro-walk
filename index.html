@@ -1,0 +1,16 @@
+async function loadMorningData() {
+  try {
+    // Cache-busting query parameter ensures your mobile browser gets fresh data
+    const res = await fetch(`data.json?t=${new Date().getTime()}`);
+    if (!res.ok) throw new Error("Local data not available yet");
+    const payload = await res.json();
+    
+    console.log("Loaded data updated at:", payload.last_updated);
+    renderDashboard(payload);
+  } catch (err) {
+    console.warn("Falling back to offline/model data:", err);
+    renderDashboard(FALLBACK_MODEL_DATA);
+  }
+}
+
+window.addEventListener("DOMContentLoaded", loadMorningData);
