@@ -1,10 +1,11 @@
+
 name: Daily Morning Macro Update
 
 on:
   schedule:
     # 04:30 UTC every morning
     - cron: '30 4 * * *'
-  workflow_dispatch: # Allows manual trigger via the GitHub UI anytime
+  workflow_dispatch:
 
 jobs:
   update-macro-data:
@@ -18,10 +19,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
-          pip install yfinance pandas
+          pip install -r requirements.txt
 
       - name: Run data fetcher
         run: |
