@@ -1,38 +1,59 @@
+import json
+import yfinance as yf
+from datetime import datetime
 
-name: Daily Morning Macro Update
+# Map of assets to their Yahoo Finance tickers
+TICKERS = {
+    "brent": "BZ=F",        # Brent Crude ($/bbl)
+    "copper": "HG=F",       # COMEX Copper ($/lb)
+    "wheat": "ZW=F",        # CBOT Wheat (cents/bushel)
+    "gbpusd": "GBPUSD=X",   # GBP / USD
+    "us10y": "^TNX",        # US 10-Year Treasury Yield (quoted x10)
+    "uk10y": "^TMBMKGB-10Y",# UK 10-Year Gilt Yield
+    "hyg": "HYG"            # High Yield ETF (proxy for credit stress)
+}
 
-on:
-  schedule:
-    # 04:30 UTC every morning
-    - cron: '30 4 * * *'
-  workflow_dispatch:
+def fetch_macro_series():
+    output = {
+        "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+        "series": {}
+    }
 
-jobs:
-  update-macro-data:
-    runs-on: ubuntu-latest
+    for key, sym in TICKERS.items():
+        try:
+            ticker = yf.Ticker(sym)
+            hist = ticker.history(period="1mo")
+            if hist.empty:
+                continue
 
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+            prices = []
+            for date, row in hist.iterrows():
+                val = float(row["Close"])
+                # Adjust US 10Y CBOE formatting (e.g. 44.5 -> 4.45%)
+                if sym == "^TNX":
+                    val = val / 10.0
+                prices.append({
+                    "date": date.strftime("%Y-%m-%d"),
+                    "price": round(val, 3)
+                })
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
+            if prices:
+                current = prices[-1]["price"]
+                prev = prices[-2]["price"] if len(prices) > 1 else current
+                delta_pct = round(((current - prev) / prev) * 100, 2)
 
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+                output["series"][key] = {
+                    "current": current,
+                    "delta_pct": delta_pct,
+                    "history": prices
+                }
+        except Exception as e:
+            print(f"Error fetching {key} ({sym}): {e}")
 
-      - name: Run data fetcher
-        run: |
-          python update_data.py
+    return output
 
-      - name: Commit and push updated data.json
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.json
-          git commit -m "chore: automated morning market data refresh [skip ci]" || echo "No changes to commit"
-          git push
+if __name__ == "__main__":
+    data = fetch_macro_series()
+    with open("data.json", "w") as f:
+        json.dump(data, f, indent=2)
+    print("Successfully generated data.json")
