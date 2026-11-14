@@ -1,95 +1,254 @@
-import json
-import yfinance as yf
-from datetime import datetime, timezone
-
-TICKERS = {
-    # Tab 1: Physical & Supply Chain
-    "brent": "BZ=F",          # Brent Crude ($/bbl)
-    "natgas": "NG=F",         # Natural Gas ($/MMBtu)
-    "zim": "ZIM",             # ZIM Container Shipping (Spot freight proxy)
-    "bdry": "BDRY",           # Breakwave Dry Bulk Shipping ETF
-    "copper": "HG=F",         # COMEX Copper ($/lb)
-    "wheat": "ZW=F",          # CBOT Wheat (cents/bushel)
-
-    # Tab 2: Rates, FX & Inflation
-    "gbpusd": "GBPUSD=X",     # GBP / USD
-    "uk10y": "^TMBMKGB-10Y",  # UK 10-Year Gilt Yield
-    "us10y": "^TNX",          # US 10-Year Treasury Yield
-    "gold": "GC=F",           # Gold Futures ($/oz)
-
-    # Tab 3: Liquidity & Risk
-    "ndx": "^NDX",            # NASDAQ-100 (Mag 7 & tech liquidity)
-    "hyg": "HYG",             # High Yield Corporate Bond ETF
-    "vix": "^VIX"             # CBOE Volatility Index
-}
-
-def fetch_macro_series():
-    output = {
-        "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        "series": {}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Macro Walk</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: #131b2e;
+      --nav-bg: #0f1626;
+      --border: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --green: #10b981;
+      --red: #ef4444;
+      --accent: #38bdf8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 16px;
+      padding-bottom: 48px;
+    }
+    header {
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.3px; }
+    .updated { font-size: 0.72rem; color: var(--text-muted); }
+    
+    .tabs {
+      position: sticky;
+      top: 8px;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      background: var(--nav-bg);
+      padding: 5px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 9px 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn.active {
+      background: var(--card);
+      color: var(--accent);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
 
-    for key, sym in TICKERS.items():
-        try:
-            ticker = yf.Ticker(sym)
-            hist = ticker.history(period="1mo")
-            if hist.empty:
-                continue
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 600px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+    .delta {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .delta.up { background: rgba(16, 185, 129, 0.15); color: var(--green); }
+    .delta.down { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+    .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .unit {
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+    .subtitle { font-size: 0.72rem; color: var(--text-muted); line-height: 1.35; }
+    canvas {
+      width: 100%;
+      height: 46px;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Macro Walk</h1>
+      <div class="subtitle">Physical & Financial Pulse</div>
+    </div>
+    <div id="timestamp" class="updated">Loading...</div>
+  </header>
 
-            prices = []
-            for date, row in hist.iterrows():
-                val = float(row["Close"])
-                # Safeguard: only divide ^TNX if Yahoo ever reverts to x10 quoting
-                if sym == "^TNX" and val > 20:
-                    val = val / 10.0
-                prices.append({
-                    "date": date.strftime("%Y-%m-%d"),
-                    "price": round(val, 3)
-                })
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="physical">Physical</button>
+    <button class="tab-btn" data-tab="rates">Rates & FX</button>
+    <button class="tab-btn" data-tab="risk">Liquidity</button>
+  </nav>
 
-            if prices:
-                current = prices[-1]["price"]
-                prev = prices[-2]["price"] if len(prices) > 1 else current
-                delta_pct = round(((current - prev) / prev) * 100, 2)
+  <div class="grid" id="dashboard-grid"></div>
 
-                output["series"][key] = {
-                    "current": current,
-                    "delta_pct": delta_pct,
-                    "history": prices
-                }
-        except Exception as e:
-            print(f"Error fetching {key} ({sym}): {e}")
+  <script>
+    const TABS = {
+      physical: [
+        { key: "brent", label: "Brent Crude Oil", unit: "$/bbl", note: "Upstream energy; 7–14d forecourt pass-through" },
+        { key: "natgas", label: "Natural Gas", unit: "$/MMBtu", note: "Marginal power generation & commercial overhead" },
+        { key: "zim", label: "Container Freight (ZIM)", unit: "$", note: "Spot ocean box capacity & port bottleneck proxy" },
+        { key: "bdry", label: "Dry Bulk Freight (BDRY)", unit: "$", note: "Raw commodity & grain vessel freight rates" },
+        { key: "copper", label: "Doctor Copper", unit: "$/lb", note: "Global manufacturing & infrastructure demand" },
+        { key: "wheat", label: "CBOT Wheat", unit: "¢/bu", note: "Subsistence & staple food input pricing" }
+      ],
+      rates: [
+        { key: "gbpusd", label: "GBP / USD", unit: "", note: "Purchasing power & imported energy inflation shield" },
+        { key: "uk10y", label: "UK 10Y Gilt", unit: "%", note: "Domestic borrowing cost & BoE expectations" },
+        { key: "us10y", label: "US 10Y Treasury", unit: "%", note: "Global risk-free rate & funding conditions" },
+        { key: "gold", label: "Gold", unit: "$/oz", note: "Monetary devaluation & fiscal stress hedge" },
+        { key: "cu_au", label: "Copper / Gold Ratio", unit: "×10³", note: "Rising = industrial growth; falling = flight to safety" }
+      ],
+      risk: [
+        { key: "ndx", label: "NASDAQ-100", unit: "pts", note: "Mag 7 mega-cap tech & global liquidity pulse" },
+        { key: "hyg", label: "High Yield ETF (HYG)", unit: "$", note: "Corporate credit stress & default appetite" },
+        { key: "vix", label: "VIX Volatility", unit: "idx", note: "<15 calm; 20–25 hedging; >30 acute market stress" }
+      ]
+    };
 
-    # Calculate Copper-to-Gold Ratio (Growth vs. Fear)
-    if "copper" in output["series"] and "gold" in output["series"]:
-        c_hist = {p["date"]: p["price"] for p in output["series"]["copper"]["history"]}
-        g_hist = {p["date"]: p["price"] for p in output["series"]["gold"]["history"]}
-        common_dates = sorted(set(c_hist.keys()) & set(g_hist.keys()))
+    let currentTab = "physical";
+    let cachedPayload = null;
 
-        ratio_prices = []
-        for d in common_dates:
-            if g_hist[d] > 0:
-                # Scaled x1000 for clean readability (e.g. ~2.35)
-                ratio_val = (c_hist[d] / g_hist[d]) * 1000
-                ratio_prices.append({
-                    "date": d,
-                    "price": round(ratio_val, 3)
-                })
+    function drawSparkline(canvas, history) {
+      if (!history || history.length < 2) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
 
-        if ratio_prices:
-            curr_r = ratio_prices[-1]["price"]
-            prev_r = ratio_prices[-2]["price"] if len(ratio_prices) > 1 else curr_r
-            delta_r = round(((curr_r - prev_r) / prev_r) * 100, 2)
-            output["series"]["cu_au"] = {
-                "current": curr_r,
-                "delta_pct": delta_r,
-                "history": ratio_prices
-            }
+      const prices = history.map(h => h.price);
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      const range = max - min === 0 ? 1 : max - min;
+      const w = rect.width;
+      const h = rect.height;
 
-    return output
+      ctx.clearRect(0, 0, w, h);
+      ctx.beginPath();
+      ctx.strokeStyle = prices[prices.length - 1] >= prices[0] ? '#10b981' : '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
 
-if __name__ == "__main__":
-    data = fetch_macro_series()
-    with open("data.json", "w") as f:
-        json.dump(data, f, indent=2)
-    print("Successfully generated v1.1 data.json")
+      prices.forEach((p, i) => {
+        const x = (i / (prices.length - 1)) * w;
+        const y = h - ((p - min) / range) * (h - 8) - 4;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    function renderActiveTab() {
+      const grid = document.getElementById("dashboard-grid");
+      if (!cachedPayload) return;
+
+      grid.innerHTML = "";
+      const items = TABS[currentTab] || [];
+
+      items.forEach(item => {
+        const s = cachedPayload.series[item.key];
+        if (!s) return;
+
+        const isPositive = s.delta_pct >= 0;
+        const sign = isPositive ? "+" : "";
+        const deltaClass = isPositive ? "up" : "down";
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="label">${item.label}</span>
+            <span class="delta ${deltaClass}">${sign}${s.delta_pct.toFixed(2)}%</span>
+          </div>
+          <div class="value">${s.current.toLocaleString()} <span class="unit">${item.unit}</span></div>
+          <canvas id="cvs-${item.key}"></canvas>
+          <div class="subtitle">${item.note}</div>
+        `;
+        grid.appendChild(card);
+
+        const canvas = document.getElementById(`cvs-${item.key}`);
+        drawSparkline(canvas, s.history);
+      });
+    }
+
+    async function loadMorningData() {
+      const ts = document.getElementById("timestamp");
+      const grid = document.getElementById("dashboard-grid");
+
+      try {
+        const res = await fetch(`data.json?t=${Date.now()}`);
+        if (!res.ok) throw new Error("Awaiting data");
+        cachedPayload = await res.json();
+        ts.innerText = `Updated: ${cachedPayload.last_updated}`;
+        renderActiveTab();
+      } catch (err) {
+        ts.innerText = "Syncing live data...";
+        grid.innerHTML = `<div class="card"><div class="label">Status</div><div class="value">Fetching morning data...</div><div class="subtitle">Run the GitHub Action once to populate new tickers.</div></div>`;
+      }
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentTab = btn.dataset.tab;
+        renderActiveTab();
+      });
+    });
+
+    window.addEventListener("DOMContentLoaded", loadMorningData);
+    window.addEventListener("resize", renderActiveTab);
+  </script>
+</body>
+</html>
