@@ -1,14 +1,10 @@
 {
-  "last_updated": "2026-11-20 13:24 UTC",
+  "last_updated": "2026-11-21 12:53 UTC",
   "series": {
     "brent": {
-      "current": 88.89,
-      "delta_pct": -3.36,
+      "current": 92.57,
+      "delta_pct": 0.64,
       "history": [
-        {
-          "date": "2026-10-20",
-          "price": 108.79
-        },
         {
           "date": "2026-10-21",
           "price": 108.82
@@ -99,18 +95,14 @@
         },
         {
           "date": "2026-11-20",
-          "price": 88.89
+          "price": 92.57
         }
       ]
     },
     "natgas": {
-      "current": 3.592,
-      "delta_pct": 9.91,
+      "current": 3.411,
+      "delta_pct": 4.38,
       "history": [
-        {
-          "date": "2026-10-20",
-          "price": 2.963
-        },
         {
           "date": "2026-10-21",
           "price": 2.79
@@ -201,18 +193,14 @@
         },
         {
           "date": "2026-11-20",
-          "price": 3.592
+          "price": 3.411
         }
       ]
     },
     "zim": {
-      "current": 29.62,
-      "delta_pct": -1.0,
+      "current": 29.32,
+      "delta_pct": -1.01,
       "history": [
-        {
-          "date": "2026-10-20",
-          "price": 29.14
-        },
         {
           "date": "2026-10-21",
           "price": 29.15
@@ -300,17 +288,17 @@
         {
           "date": "2026-11-19",
           "price": 29.62
+        },
+        {
+          "date": "2026-11-20",
+          "price": 29.32
         }
       ]
     },
     "bdry": {
-      "current": 12.43,
-      "delta_pct": -0.72,
+      "current": 12.12,
+      "delta_pct": -2.49,
       "history": [
-        {
-          "date": "2026-10-20",
-          "price": 12.48
-        },
         {
           "date": "2026-10-21",
           "price": 12.99
@@ -398,17 +386,17 @@
         {
           "date": "2026-11-19",
           "price": 12.43
+        },
+        {
+          "date": "2026-11-20",
+          "price": 12.12
         }
       ]
     },
     "copper": {
-      "current": 5.525,
-      "delta_pct": -1.78,
+      "current": 5.477,
+      "delta_pct": -2.63,
       "history": [
-        {
-          "date": "2026-10-20",
-          "price": 6.567
-        },
         {
           "date": "2026-10-21",
           "price": 6.543
@@ -499,18 +487,14 @@
         },
         {
           "date": "2026-11-20",
-          "price": 5.525
+          "price": 5.477
         }
       ]
     },
     "wheat": {
-      "current": 595.75,
-      "delta_pct": 3.03,
+      "current": 574.25,
+      "delta_pct": -0.69,
       "history": [
-        {
-          "date": "2026-10-20",
-          "price": 643.25
-        },
         {
           "date": "2026-10-21",
           "price": 628.25
@@ -601,18 +585,14 @@
         },
         {
           "date": "2026-11-20",
-          "price": 595.75
+          "price": 574.25
         }
       ]
     },
     "gbpusd": {
-      "current": 1.313,
-      "delta_pct": -0.15,
+      "current": 1.309,
+      "delta_pct": -0.46,
       "history": [
-        {
-          "date": "2026-10-20",
-          "price": 1.331
-        },
         {
           "date": "2026-10-21",
           "price": 1.337
@@ -703,13 +683,13 @@
         },
         {
           "date": "2026-11-20",
-          "price": 1.313
+          "price": 1.309
         }
       ]
     },
     "us10y": {
-      "current": 5.052,
-      "delta_pct": -0.28,
+      "current": 4.912,
+      "delta_pct": -2.77,
       "history": [
         {
           "date": "2026-10-20",
@@ -802,17 +782,17 @@
         {
           "date": "2026-11-19",
           "price": 5.052
+        },
+        {
+          "date": "2026-11-20",
+          "price": 4.912
         }
       ]
     },
     "gold": {
-      "current": 3574.4,
-      "delta_pct": -3.01,
+      "current": 3515.4,
+      "delta_pct": -4.62,
       "history": [
-        {
-          "date": "2026-10-20",
-          "price": 4142.6
-        },
         {
           "date": "2026-10-21",
           "price": 4150.0
@@ -903,18 +883,14 @@
         },
         {
           "date": "2026-11-20",
-          "price": 3574.4
+          "price": 3515.4
         }
       ]
     },
     "ndx": {
-      "current": 26517.051,
-      "delta_pct": -2.21,
+      "current": 25028.98,
+      "delta_pct": -5.61,
       "history": [
-        {
-          "date": "2026-10-20",
-          "price": 29490.279
-        },
         {
           "date": "2026-10-21",
           "price": 29822.52
@@ -1002,17 +978,17 @@
         {
           "date": "2026-11-19",
           "price": 26517.051
+        },
+        {
+          "date": "2026-11-20",
+          "price": 25028.98
         }
       ]
     },
     "hyg": {
-      "current": 76.53,
-      "delta_pct": -0.16,
+      "current": 76.33,
+      "delta_pct": -0.26,
       "history": [
-        {
-          "date": "2026-10-20",
-          "price": 76.432
-        },
         {
           "date": "2026-10-21",
           "price": 76.581
@@ -1100,12 +1076,16 @@
         {
           "date": "2026-11-19",
           "price": 76.53
+        },
+        {
+          "date": "2026-11-20",
+          "price": 76.33
         }
       ]
     },
     "vix": {
-      "current": 30.95,
-      "delta_pct": 8.83,
+      "current": 35.89,
+      "delta_pct": 26.2,
       "history": [
         {
           "date": "2026-10-20",
@@ -1201,18 +1181,14 @@
         },
         {
           "date": "2026-11-20",
-          "price": 30.95
+          "price": 35.89
         }
       ]
     },
     "cu_au": {
-      "current": 1.546,
-      "delta_pct": 1.31,
+      "current": 1.558,
+      "delta_pct": 2.1,
       "history": [
-        {
-          "date": "2026-10-20",
-          "price": 1.585
-        },
         {
           "date": "2026-10-21",
           "price": 1.577
@@ -1303,7 +1279,7 @@
         },
         {
           "date": "2026-11-20",
-          "price": 1.546
+          "price": 1.558
         }
       ]
     }
